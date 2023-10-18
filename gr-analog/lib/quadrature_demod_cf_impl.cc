@@ -35,22 +35,29 @@ quadrature_demod_cf_impl::quadrature_demod_cf_impl(float gain)
     set_alignment(std::max(1, alignment_multiple));
 
     set_history(2); // we need to look at the previous value
+    set_max_noutput_items(D_MAX_ITEMS);
+    d_tmp = (gr_complex*) volk_malloc(D_MAX_ITEMS * sizeof(gr_complex), volk_get_alignment());
 }
 
-quadrature_demod_cf_impl::~quadrature_demod_cf_impl() {}
+quadrature_demod_cf_impl::~quadrature_demod_cf_impl() {
+    volk_free(d_tmp);
+}
 
 int quadrature_demod_cf_impl::work(int noutput_items,
                                    gr_vector_const_void_star& input_items,
                                    gr_vector_void_star& output_items)
 {
-    gr_complex* in = (gr_complex*)input_items[0];
+    const gr_complex* in = (gr_complex*)input_items[0];
     float* out = (float*)output_items[0];
 
-    std::vector<gr_complex> tmp(noutput_items);
-    volk_32fc_x2_multiply_conjugate_32fc(&tmp[0], &in[1], &in[0], noutput_items);
+    //std::vector<gr_complex> tmp(noutput_items);
+    volk_32fc_x2_multiply_conjugate_32fc(d_tmp, in + 1, in, noutput_items);
+    volk_32fc_s32f_atan2_32f(out, d_tmp, d_gain, noutput_items);
+    /*    
     for (int i = 0; i < noutput_items; i++) {
         out[i] = d_gain * gr::fast_atan2f(imag(tmp[i]), real(tmp[i]));
     }
+    */
 
     return noutput_items;
 }

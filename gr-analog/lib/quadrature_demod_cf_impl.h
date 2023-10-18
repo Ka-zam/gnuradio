@@ -19,7 +19,9 @@ namespace analog {
 class quadrature_demod_cf_impl : public quadrature_demod_cf
 {
 private:
+	static constexpr int D_MAX_ITEMS = 1000;
     float d_gain;
+    gr_complex* d_tmp;
 
 public:
     quadrature_demod_cf_impl(float gain);
